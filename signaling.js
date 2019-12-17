@@ -1,19 +1,21 @@
-const express = require("express");
-const { Server } = require("ws");
+const express = require('express');
+const socketIO = require('socket.io');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 443;
 
-const server = express().listen(PORT, () =>
-  console.log(`Listening on ${PORT}`)
-);
 
-const wss = new Server({ server });
+const server = express()
+  
+  .listen(PORT, () => console.log(`Listening on ${PORT}`));
+
+const io = socketIO(server);
+
 
 
 var users = {};
 
 //when a user connects to our sever
-wss.on("connection", function(connection) {
+io.sockets.on("connection", function(connection) {
   console.log("User connected");
 
   //when server gets a message from a connected user
@@ -40,6 +42,7 @@ wss.on("connection", function(connection) {
             type: "login",
             success: false
           });
+          // console.log("NNN Users : ", users);
         } else {
           //save user connection on the server
           users[data.name] = connection;
@@ -49,6 +52,7 @@ wss.on("connection", function(connection) {
             type: "login",
             success: true
           });
+          // console.log("AAA Users : ", users);
         }
 
         break;
@@ -61,6 +65,7 @@ wss.on("connection", function(connection) {
         var conn = users[data.name];
 
         if (conn != null) {
+          console.log("this is dist" + conn);
           //setting that UserA connected with UserB
           connection.otherName = data.name;
 
@@ -149,5 +154,6 @@ wss.on("connection", function(connection) {
 });
 
 function sendTo(connection, message) {
-  connection.send(JSON.stringify(message));
+  console.log("this is from send function " + message);
+  connection.emit("newMessage", JSON.stringify(message));
 }
